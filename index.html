@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayudante IA Defensoria Oficial</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+  --bg:#f4f7fb; --surface:#fff; --surface2:#f8fafc; --ink:#172033; --muted:#64748b;
+  --line:#e2e8f0; --primary:#2563eb; --primary-dark:#1d4ed8; --accent:#7c3aed;
+  --success:#16a34a; --danger:#dc2626; --warning:#b45309;
+  --shadow:0 20px 55px rgba(15,23,42,.10); --shadow-sm:0 7px 22px rgba(15,23,42,.07);
+  --radius:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; min-height:100vh; color:var(--ink); font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(37,99,235,.12),transparent 28rem),
+    radial-gradient(circle at 90% 5%,rgba(124,58,237,.10),transparent 28rem),
+    var(--bg);
+}
+button,input,select,textarea{font:inherit}
+button{border:0}
+.app{max-width:1440px;margin:0 auto;padding:24px}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;
+  background:rgba(255,255,255,.86);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.8);
+  border-radius:24px;padding:16px 20px;box-shadow:var(--shadow-sm);position:sticky;top:12px;z-index:30;
+}
+.brand{display:flex;align-items:center;gap:13px}
+.brand-icon{
+  width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:white;font-size:20px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));box-shadow:0 9px 22px rgba(37,99,235,.25)
+}
+.brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:-.03em}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.connection{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:#94a3b8;box-shadow:0 0 0 4px #f1f5f9}
+.dot.ok{background:var(--success);box-shadow:0 0 0 4px #dcfce7}
+.hero{
+  background:linear-gradient(135deg,#0f2d52 0%,#173f72 55%,#314b99 100%);color:#fff;border-radius:30px;
+  padding:34px 36px;margin-bottom:18px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.hero:after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;right:-80px;top:-140px;background:rgba(255,255,255,.08)}
+.hero h2{font-size:30px;line-height:1.1;margin:0 0 9px;letter-spacing:-.04em;position:relative;z-index:1}
+.hero p{margin:0;max-width:800px;color:rgba(255,255,255,.78);font-size:14px;line-height:1.6;position:relative;z-index:1}
+.tabs{
+  display:flex;gap:8px;padding:6px;background:rgba(255,255,255,.75);border:1px solid var(--line);
+  border-radius:18px;margin-bottom:18px;box-shadow:var(--shadow-sm)
+}
+.tab{flex:1;background:transparent;color:var(--muted);padding:13px 15px;border-radius:13px;font-weight:700;cursor:pointer;transition:.2s}
+.tab:hover{background:#f1f5f9;color:var(--ink)}
+.tab.active{background:#fff;color:var(--primary);box-shadow:0 5px 16px rgba(15,23,42,.08)}
+.panel{display:none}.panel.active{display:block}
+.layout{display:grid;grid-template-columns:minmax(330px,.9fr) minmax(450px,1.35fr);gap:18px;align-items:start}
+.card{
+  background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:var(--radius);padding:21px;
+  box-shadow:var(--shadow-sm);margin-bottom:18px
+}
+.card:last-child{margin-bottom:0}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.card-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.card-title i{color:var(--primary)}
+.card-sub{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px}
+label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;margin-bottom:7px}
+.field{margin-bottom:15px}.field:last-child{margin-bottom:0}
+input[type=text],input[type=password],input[type=file],select,textarea{
+  width:100%;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:13px;
+  padding:12px 13px;outline:0;transition:.2s;box-shadow:0 2px 5px rgba(15,23,42,.02)
+}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.10)}
+input[type=file]{background:var(--surface2);cursor:pointer;padding:10px}
+select{cursor:pointer}
+textarea{resize:vertical;min-height:100px;line-height:1.55}
+.api-row{display:grid;grid-template-columns:1fr auto;gap:8px}.api-row input{min-width:0}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 15px;border-radius:12px;
+  font-weight:750;font-size:12px;cursor:pointer;transition:.2s;white-space:nowrap
+}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-primary{color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));box-shadow:0 7px 18px rgba(37,99,235,.23)}
+.btn-secondary{color:#334155;background:#eef2f7}.btn-secondary:hover:not(:disabled){background:#e2e8f0}
+.btn-success{color:#fff;background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 7px 18px rgba(22,163,74,.18)}
+.btn-danger{color:#991b1b;background:#fee2e2}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.link{color:var(--primary);font-size:11px;font-weight:700;text-decoration:none}.link:hover{text-decoration:underline}
+.privacy{display:flex;gap:8px;align-items:flex-start;color:var(--muted);font-size:10px;line-height:1.5;margin-top:9px}
+.dropzone{
+  border:1.5px dashed #b7c7dc;background:linear-gradient(180deg,#f8fbff,#f5f8fc);border-radius:17px;padding:26px 18px;
+  text-align:center;cursor:pointer;transition:.2s
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--primary);background:#eff6ff}
+.dropzone i{font-size:27px;color:var(--primary);margin-bottom:9px}.dropzone strong{display:block;font-size:13px}.dropzone span{display:block;color:var(--muted);font-size:10px;margin-top:5px}
+.progress{height:7px;background:#e8edf4;border-radius:99px;overflow:hidden;margin-top:13px}.bar{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));transition:.25s}
+.status{font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:7px}.status.success{color:var(--success)}.status.error{color:var(--danger)}
+.preview,.response{
+  white-space:pre-wrap;overflow:auto;border-radius:16px;line-height:1.65
+}
+.preview{max-height:230px;min-height:80px;padding:14px;background:#f8fafc;border:1px solid var(--line);font-size:11px;color:#334155}
+.response{
+  min-height:570px;max-height:720px;padding:23px;background:#fbfdff;border:1px solid var(--line);
+  border-left:4px solid var(--primary);font-size:13px;color:#1e293b
+}
+.response.empty{display:grid;place-items:center;text-align:center;color:#94a3b8;white-space:normal}
+.response.empty div{max-width:290px}.response.empty i{font-size:35px;margin-bottom:12px;color:#cbd5e1}
+.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.toolbar .btn{padding:8px 11px;font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:6px 9px;font-size:10px;font-weight:800}
+.badge-blue{background:#dbeafe;color:#1d4ed8}.badge-green{background:#dcfce7;color:#15803d}.badge-purple{background:#ede9fe;color:#6d28d9}
+.stepbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.step{display:flex;align-items:center;gap:9px;padding:12px;border:1px solid var(--line);background:#fff;border-radius:15px}
+.step-num{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:#eef2f7;color:#64748b;font-weight:800;font-size:11px}
+.step.active .step-num{background:#dbeafe;color:var(--primary)}.step strong{font-size:11px}.step small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.result-card{display:none}.result-card.show{display:block}
+.editor{
+  min-height:470px;max-height:700px;overflow:auto;border:1px solid var(--line);border-radius:16px;
+  background:#fff;padding:20px;font-family:Georgia,"Times New Roman",serif;font-size:13px;line-height:1.7;white-space:pre-wrap;outline:0
+}
+.notice{margin-top:12px;padding:11px 13px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:12px;font-size:10px;line-height:1.5}
+.audio-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.audio-output{min-height:180px}.audio-output textarea{min-height:180px}
+audio{width:100%;margin-top:12px}
+.hidden{display:none!important}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.56);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.modal.show{display:flex}.modal-box{width:min(820px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:22px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+.print-body{white-space:pre-wrap;font-family:Georgia,serif;line-height:1.7;font-size:13px}.print-head{text-align:center;border-bottom:2px solid var(--primary);padding-bottom:14px;margin-bottom:20px}.print-head h2{margin:0}.print-head p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.toast{
+  position:fixed;right:22px;bottom:22px;z-index:200;padding:13px 16px;background:#172033;color:#fff;border-radius:13px;
+  box-shadow:var(--shadow);font-size:12px;transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s
+}.toast.show{transform:translateY(0);opacity:1}
+.footer{text-align:center;color:#94a3b8;font-size:10px;margin:20px 0 5px}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.response{min-height:400px}.audio-grid{grid-template-columns:1fr}}
+@media(max-width:700px){
+  .app{padding:12px}.topbar{position:relative;top:0;padding:13px 15px}.connection{display:none}
+  .hero{padding:26px 22px;border-radius:23px}.hero h2{font-size:24px}.tabs{overflow:auto}.tab{min-width:145px}
+  .stepbar{grid-template-columns:1fr}.api-row{grid-template-columns:1fr}.actions .btn{width:100%}
+  .card{padding:16px;border-radius:18px}.response{min-height:350px}
+}
+@media print{
+  body *{visibility:hidden!important}.modal.show,.modal.show *{visibility:visible!important}
+  .modal.show{position:absolute;background:#fff;display:block!important;padding:0}.modal-box{width:100%;max-height:none;box-shadow:none;border-radius:0}
+  .modal-actions{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-file-shield"></i></div>
+      <div><h1>Ayudante IA Defensoria Oficial</h1><p>Analizador · Anonimizador · Revisión de expedientes</p></div>
+    </div>
+    <div class="connection"><span id="connDot" class="dot"></span><span id="connText">API no configurada</span></div>
+  </header>
+
+  <section class="hero">
+    <h2>Ayudante IA Defensoria Oficial</h2>
+    <p>Permite analizar Pdf, anonimizar Pdf, revisar expedientes del Sistema Digital. Utiliza IA gratuita (sin costo) pero requiere insertar una clave por usuario.</p>
+  </section>
+
+  <nav class="tabs" aria-label="Secciones">
+    <button class="tab active" data-tab="analisis"><i class="fa-solid fa-magnifying-glass"></i> Analizar documento</button>
+    <button class="tab" data-tab="expedientes"><i class="fa-solid fa-folder-tree"></i> Expedientes JSON</button>
+    <button class="tab" data-tab="anonimizar"><i class="fa-solid fa-user-shield"></i> Anonimizar / limpiar</button>
+    <button class="tab" data-tab="audio"><i class="fa-solid fa-waveform-lines"></i> Audio</button>
+  </nav>
+
+  <section id="tab-analisis" class="panel active">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-head"><div><div class="card-title"><i class="fa-solid fa-key"></i> Conexión con Groq</div><div class="card-sub">La clave se mantiene únicamente en la memoria de esta pestaña.</div></div><span id="keyBadge" class="badge badge-blue">Sin clave</span></div>
+          <div class="field">
+            <label for="apiKey"><i class="fa-solid fa-lock"></i> Clave API</label>
+            <div class="api-row">
+              <input id="apiKey" type="password" placeholder="gsk_..." autocomplete="off">
+              <button id="toggleKey" class="btn btn-secondary" type="button"><i class="fa-solid fa-eye"></i> Mostrar</button>
+            </div>
+            <div style="margin-top:8px"><a class="link" href="https://console.groq.com/keys" target="_blank" rel="noopener">Obtener clave en Groq ↗</a></div>
+          </div>
+          <div class="field">
+            <label for="modelSelect"><i class="fa-solid fa-microchip"></i> Modelo de texto</label>
+            <select id="modelSelect">
+              <optgroup label="Texto">
+                <option value="openai/gpt-oss-20b">GPT-OSS 20B — recomendado / rápido</option>
+                <option value="openai/gpt-oss-120b">GPT-OSS 120B — mayor capacidad</option>
+                <option value="openai/gpt-oss-safeguard-20b">GPT-OSS Safeguard 20B — seguridad</option>
+                <option value="qwen/qwen3.6-27b">Qwen3.6 27B — razonamiento / visión</option>
+                <option value="qwen/qwen3.8-27b">Qwen3.8 27B — razonamiento</option>
+                <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant — rápido</option>
+                <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile — potente</option>
+                <option value="groq/compound">Groq Compound — herramientas</option>
+                <option value="groq/compound-mini">Groq Compound Mini — menor latencia</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="privacy"><i class="fa-solid fa-shield-halved"></i><span>El PDF se procesa localmente para extraer el texto. Ese texto es el que se envía a Groq. No uses documentos cuya política institucional prohíba servicios externos.</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><div class="card-title"><i class="fa-solid fa-file-arrow-up"></i> Documento</div><div class="card-sub">PDF con texto seleccionable o archivo TXT.</div></div><span id="fileBadge" class="badge badge-blue">Esperando</span></div>
+          <label for="fileInput" class="dropzone" id="dropzone">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <strong>Arrastrá tu archivo aquí</strong>
+            <span>o hacé clic para seleccionarlo · PDF / TXT</span>
+            <input id="fileInput" type="file" accept=".pdf,.txt,application/pdf,text/plain" hidden>
+          </label>
+          <div id="fileStatus" class="status"><i class="fa-regular fa-circle"></i> Ningún archivo cargado.</div>
+          <div class="progress"><div id="fileBar" class="bar"></div></div>
+          <div style="margin-top:14px">
+            <label><i class="fa-solid fa-scroll"></i> Vista previa del texto extraído</label>
+            <div id="extractedText" class="preview">Ningún archivo cargado.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><div class="card-title"><i class="fa-solid fa-comment-question"></i> Tu consulta</div><div class="card-sub">La respuesta se basa exclusivamente en el texto cargado.</div></div></div>
+          <textarea id="userPrompt" placeholder="Ej.: ¿Cuáles son los puntos centrales del documento? ¿Qué argumentos se presentan?"></textarea>
+          <div class="actions">
+            <button id="analyzeBtn" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Procesar consulta</button>
+            <button id="clearBtn" class="btn btn-secondary"><i class="fa-solid fa-rotate-left"></i> Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div><div class="card-title"><i class="fa-solid fa-sparkles"></i> Respuesta de Groq</div><div class="card-sub">Resultado de tu consulta sobre el documento.</div></div>
+            <div class="toolbar"><button id="copyAnswer" class="btn btn-secondary"><i class="fa-regular fa-copy"></i> Copiar</button><button id="printAnswer" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Imprimir</button></div>
+          </div>
+          <div id="aiResponse" class="response empty"><div><i class="fa-regular fa-message"></i><br><strong>Tu respuesta aparecerá aquí</strong><br><span>Subí un documento y hacé una consulta para comenzar.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-anonimizar" class="panel">
+    <div class="stepbar">
+      <div class="step active"><span class="step-num">1</span><div><strong>Subir documento</strong><small>PDF o TXT</small></div></div>
+      <div class="step"><span class="step-num">2</span><div><strong>Anonimizar</strong><small>Detección con IA</small></div></div>
+      <div class="step"><span class="step-num">3</span><div><strong>Exportar</strong><small>PDF o DOC</small></div></div>
+    </div>
+
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-head"><div><div class="card-title"><i class="fa-solid fa-user-lock"></i> Redactor jurídico</div><div class="card-sub">El mismo documento cargado en la pestaña Analizar puede reutilizarse.</div></div><span class="badge badge-purple">Anonimización</span></div>
+          <div class="notice"><strong>Importante:</strong> revisá siempre el resultado antes de compartirlo o incorporarlo a un expediente. La IA puede requerir correcciones humanas.</div>
+          <div class="actions">
+            <button id="anonBtn" class="btn btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> Anonimizar documento</button>
+            <button id="anonClear" class="btn btn-secondary"><i class="fa-solid fa-eraser"></i> Limpiar resultado</button>
+          </div>
+          <div id="anonStatus" class="status"><i class="fa-regular fa-circle"></i> Listo para anonimizar.</div>
+          <div class="progress"><div id="anonBar" class="bar"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><div class="card-title"><i class="fa-solid fa-list-check"></i> Qué se protege</div><div class="card-sub">Criterios integrados del redactor original.</div></div></div>
+          <div style="display:grid;gap:8px;font-size:11px;color:#475569;line-height:1.45">
+            <div><span class="badge badge-blue">PERSONA</span> nombres e identificadores personales.</div>
+            <div><span class="badge badge-blue">DATO PERSONAL</span> DNI, CUIT/CUIL y equivalentes.</div>
+            <div><span class="badge badge-blue">DOMICILIO</span> direcciones y ubicaciones individualizables.</div>
+            <div><span class="badge badge-blue">CONTACTO</span> teléfonos y correos.</div>
+            <div><span class="badge badge-blue">EXPEDIENTE</span> expediente, causa, legajo e identificadores procesales.</div>
+            <div><span class="badge badge-blue">ÓRGANO JUDICIAL</span> juzgado, tribunal, secretaría o sala identificable.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card result-card" id="anonResultCard">
+        <div class="card-head">
+          <div><div class="card-title"><i class="fa-solid fa-file-circle-check"></i> Documento limpio</div><div class="card-sub">Podés editar el texto antes de exportarlo.</div></div>
+          <span class="badge badge-green"><i class="fa-solid fa-check"></i> Revisar antes de usar</span>
+        </div>
+        <div id="anonResult" class="editor" contenteditable="true" spellcheck="false"></div>
+        <div class="actions">
+          <button id="copyAnon" class="btn btn-secondary"><i class="fa-regular fa-copy"></i> Copiar texto</button>
+          <button id="downloadPDF" class="btn btn-success"><i class="fa-solid fa-file-pdf"></i> Generar PDF</button>
+          <button id="downloadDOC" class="btn btn-primary"><i class="fa-solid fa-file-word"></i> Generar DOC</button>
+        </div>
+        <div class="notice">El PDF/DOC se genera desde el texto limpio y no replica exactamente el diseño gráfico del original.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="tab-expedientes" class="panel">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-database"></i> Base de expedientes JSON</div>
+              <div class="card-sub">Cargá uno o ambos JSON. La búsqueda se realiza primero en el navegador.</div>
+            </div>
+            <span id="jsonBadge" class="badge badge-blue">Sin datos</span>
+          </div>
+
+          <div class="field">
+            <label for="jsonNueva"><i class="fa-solid fa-file-import"></i> Expedientes nuevos</label>
+            <input id="jsonNueva" type="file" accept=".json,application/json">
+          </div>
+          <div class="field">
+            <label for="jsonHistorica"><i class="fa-solid fa-box-archive"></i> Expedientes históricos</label>
+            <input id="jsonHistorica" type="file" accept=".json,application/json">
+          </div>
+
+          <div id="jsonStatus" class="status">
+            <i class="fa-regular fa-circle"></i> Cargá los JSON para habilitar las consultas.
+          </div>
+
+          <div class="notice">
+            <strong>Modo estricto:</strong> la IA recibe únicamente los expedientes encontrados por la búsqueda local.
+            Si la fuente no contiene un dato, debe responder <em>“No consta en los JSON cargados”</em>.
+            No se permite completar con conocimiento externo ni inferencias presentadas como hechos.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Buscar expediente</div>
+              <div class="card-sub">Por número de causa, carátula, NNyA, persona, juzgado, observaciones, etc.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="caseSearch"><i class="fa-solid fa-search"></i> Búsqueda</label>
+            <input id="caseSearch" type="text" placeholder="Ej.: 148323/2025, Mía, Gabilan, alimentos, violencia familiar...">
+          </div>
+          <div id="caseResults" class="preview" style="max-height:330px;min-height:90px">
+            Cargá los JSON y escribí una búsqueda.
+          </div>
+          <div class="actions">
+            <button id="clearCaseSearch" class="btn btn-secondary" type="button"><i class="fa-solid fa-rotate-left"></i> Limpiar</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-scale-balanced"></i> Consulta jurídica sobre la fuente</div>
+              <div class="card-sub">Seleccioná un expediente o varios resultados y formulá la pregunta.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="casePrompt"><i class="fa-solid fa-comment-question"></i> Pregunta</label>
+            <textarea id="casePrompt" placeholder="Ej.: ¿Cuál es el estado actual, quién está asignado y qué surge de las observaciones?"></textarea>
+          </div>
+          <div class="actions">
+            <button id="caseAskBtn" class="btn btn-primary" type="button"><i class="fa-solid fa-shield-halved"></i> Consultar solo los JSON</button>
+            <button id="caseClearBtn" class="btn btn-secondary" type="button"><i class="fa-solid fa-eraser"></i> Limpiar selección</button>
+          </div>
+          <div class="privacy">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Los datos seleccionados se envían a Groq al consultar. Para expedientes reales, verificá que el uso de servicios externos esté autorizado institucionalmente.</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-file-circle-check"></i> Fuente utilizada</div>
+              <div class="card-sub">Solo los registros marcados abajo se envían a la IA.</div>
+            </div>
+            <span id="selectedBadge" class="badge badge-purple">0 seleccionados</span>
+          </div>
+          <div id="selectedCases" class="preview" style="min-height:180px;max-height:430px">
+            No hay expedientes seleccionados.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-robot"></i> Respuesta fundamentada</div>
+              <div class="card-sub">La aplicación muestra también las evidencias devueltas por el modelo.</div>
+            </div>
+            <div class="toolbar">
+              <button id="copyCaseAnswer" class="btn btn-secondary" type="button"><i class="fa-regular fa-copy"></i> Copiar</button>
+            </div>
+          </div>
+          <div id="caseAnswer" class="response empty">
+            <div><i class="fa-solid fa-database"></i><br><strong>La respuesta aparecerá aquí</strong><br><span>Primero cargá los JSON y seleccioná la fuente.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-audio" class="panel">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title"><i class="fa-solid fa-waveform-lines"></i> Herramientas de audio</div><div class="card-sub">Whisper para transcripción y Orpheus para texto a voz. Usan la misma clave de Groq.</div></div><span class="badge badge-blue">Groq Audio</span></div>
+      <div class="audio-grid">
+        <div>
+          <div class="field"><label for="audioModel"><i class="fa-solid fa-microphone"></i> Modelo de audio</label>
+            <select id="audioModel">
+              <option value="whisper-large-v3-turbo">Whisper Large V3 Turbo — rápido</option>
+              <option value="whisper-large-v3">Whisper Large V3 — transcripción</option>
+              <option value="canopylabs/orpheus-v1-english">Orpheus V1 English — voz inglesa</option>
+              <option value="canopylabs/orpheus-arabic-saudi">Orpheus Arabic Saudi — voz árabe</option>
+            </select>
+          </div>
+          <div class="field"><label for="audioInput"><i class="fa-solid fa-file-audio"></i> Archivo de audio</label><input id="audioInput" type="file" accept="audio/*"></div>
+          <button id="transcribeBtn" class="btn btn-primary"><i class="fa-solid fa-microphone-lines"></i> Transcribir con Whisper</button>
+          <div id="audioStatus" class="status"><i class="fa-regular fa-circle"></i> Esperando audio.</div>
+          <textarea id="audioResult" class="audio-output" placeholder="La transcripción aparecerá aquí..."></textarea>
+        </div>
+        <div>
+          <div class="field"><label for="ttsText"><i class="fa-solid fa-comment"></i> Texto para convertir en voz</label><textarea id="ttsText" placeholder="Escribí hasta 200 caracteres para la solicitud de voz..."></textarea></div>
+          <div class="field"><label for="ttsVoice"><i class="fa-solid fa-user-voice"></i> Voz Orpheus</label><select id="ttsVoice"></select></div>
+          <button id="speakBtn" class="btn btn-primary"><i class="fa-solid fa-volume-high"></i> Generar audio</button>
+          <audio id="audioPlayer" class="hidden" controls></audio>
+          <div class="actions"><a id="audioDownload" class="btn btn-secondary hidden" download="groq-tts.wav"><i class="fa-solid fa-download"></i> Descargar WAV</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer"><i class="fa-solid fa-shield-halved"></i> DocuIA procesa el archivo localmente para extraer texto; las solicitudes a Groq requieren conexión a Internet.</div>
+</div>
+
+<div id="printModal" class="modal">
+  <div class="modal-box">
+    <div class="print-head"><h2>Respuesta de IA</h2><p id="printDate"></p></div>
+    <div id="printBody" class="print-body"></div>
+    <div class="modal-actions actions" style="justify-content:center"><button id="printBtn" class="btn btn-primary"><i class="fa-solid fa-print"></i> Imprimir</button><button id="closePrint" class="btn btn-secondary">Cerrar</button></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const CHAT_MODELS=[
+ 'openai/gpt-oss-20b','openai/gpt-oss-120b','openai/gpt-oss-safeguard-20b',
+ 'qwen/qwen3.6-27b','qwen/qwen3.8-27b','llama-3.1-8b-instant',
+ 'llama-3.3-70b-versatile','groq/compound','groq/compound-mini'
+];
+
+const SYSTEM_PROMPT=`Sos un asistente especializado en anonimización de documentos judiciales.
+
+OBJETIVO:
+Recibís el texto completo de un documento. Debés devolver una versión LIMPIA de datos sensibles, manteniendo el contenido sustantivo del documento.
+
+ELIMINÁ O REEMPLAZÁ TODA INFORMACIÓN QUE PERMITA IDENTIFICAR DIRECTA O INDIRECTAMENTE A UNA PERSONA, EN PARTICULAR:
+- nombre y apellido de personas físicas;
+- nombres completos, iniciales o combinaciones que funcionen como identificación de una persona;
+- DNI, documento, CUIT/CUIL u otros números identificatorios personales;
+- domicilio, dirección, calle, número, piso, departamento, barrio o ubicación residencial/laboral individualizable;
+- ciudad, localidad o municipio cuando identifique o permita individualizar a la persona;
+- teléfonos, correos electrónicos, fechas de nacimiento y otros datos personales identificatorios.
+
+ELIMINÁ TAMBIÉN LOS DATOS JUDICIALES IDENTIFICATORIOS:
+- número de expediente;
+- carátula;
+- nombre o identificación del juzgado/tribunal;
+- secretaría, sala o dependencia judicial cuando identifique el órgano;
+- números de causa, legajo, incidente o cualquier identificador procesal equivalente.
+
+CRITERIO DE REEMPLAZO:
+- Nombres de personas: [PERSONA].
+- DNI y demás identificadores personales: [DATO PERSONAL].
+- Domicilios: [DOMICILIO].
+- Ciudad/localidad identificatoria: [CIUDAD].
+- Teléfonos/correos: [CONTACTO].
+- Expediente/causa/legajo: [EXPEDIENTE].
+- Carátula: [CARÁTULA].
+- Juzgado/tribunal/secretaría/sala: [ÓRGANO JUDICIAL].
+- Si varias apariciones se refieren claramente a la misma entidad, mantené la misma etiqueta para conservar coherencia.
+- No inventes datos ni reemplaces por datos reales.
+
+REGLAS DE CONSERVACIÓN:
+1. Conservá el texto sustantivo, hechos, argumentos, citas, artículos legales, fechas procesales no identificatorias y estructura tanto como sea posible.
+2. No resumas.
+3. No agregues información.
+4. No cambies el sentido jurídico.
+5. No elimines contenido salvo que sea un dato sensible o judicial de los definidos arriba.
+6. Si una frase contiene un dato sensible, reemplazá el dato y conservá el resto de la frase.
+7. No expongas una lista de los datos encontrados.
+8. Devolvé ÚNICAMENTE el documento limpio, sin explicaciones, encabezados de IA, markdown ni comentarios.`;
+
+const ORPHEUS_VOICES={
+ 'canopylabs/orpheus-v1-english':[['autumn','Autumn — femenina'],['diana','Diana — femenina'],['hannah','Hannah — femenina'],['austin','Austin — masculina'],['daniel','Daniel — masculina'],['troy','Troy — masculina']],
+ 'canopylabs/orpheus-arabic-saudi':[['abdullah','Abdullah — masculina'],['fahad','Fahad — masculina'],['sultan','Sultan — masculina'],['lulwa','Lulwa — femenina'],['noura','Noura — femenina'],['aisha','Aisha — femenina']]
+};
+
+let apiKey='', rawText='', originalFile=null, audioUrl='';
+
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._toast);window._toast=setTimeout(()=>t.classList.remove('show'),2800)}
+function setApiState(){
+ const ok=!!apiKey; $('connDot').classList.toggle('ok',ok); $('connText').textContent=ok?'API lista':'API no configurada';
+ $('keyBadge').textContent=ok?'Clave lista':'Sin clave'; $('keyBadge').className='badge '+(ok?'badge-green':'badge-blue');
+}
+$('apiKey').addEventListener('input',e=>{apiKey=e.target.value.trim();setApiState()});
+$('toggleKey').addEventListener('click',()=>{const x=$('apiKey');const show=x.type==='password';x.type=show?'text':'password';$('toggleKey').innerHTML=show?'<i class="fa-solid fa-eye-slash"></i> Ocultar':'<i class="fa-solid fa-eye"></i> Mostrar'});
+
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+ document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+ btn.classList.add('active');$('tab-'+btn.dataset.tab).classList.add('active');
+}));
+
+function setFileStatus(text,type=''){const el=$('fileStatus');el.className='status '+type;el.innerHTML=text}
+function setBar(id,n){$(id).style.width=Math.max(0,Math.min(100,n))+'%'}
+
+async function extractFile(file){
+ originalFile=file; rawText=''; setBar('fileBar',5);
+ if(file.name.toLowerCase().endsWith('.txt')||file.type==='text/plain'){rawText=await file.text()}
+ else if(file.name.toLowerCase().endsWith('.pdf')||file.type==='application/pdf'){
+   const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise, pages=[];
+   for(let i=1;i<=pdf.numPages;i++){
+     const page=await pdf.getPage(i), tc=await page.getTextContent();
+     const items=tc.items.map(it=>({s:it.str,x:it.transform[4],y:it.transform[5]}));
+     items.sort((a,b)=>Math.abs(a.y-b.y)<2?a.x-b.x:b.y-a.y);
+     let lines=[],cur=[],lastY=null;
+     for(const it of items){if(lastY===null||Math.abs(it.y-lastY)<2)cur.push(it.s);else{lines.push(cur.join(' ').replace(/\s+/g,' ').trim());cur=[it.s]}lastY=it.y}
+     if(cur.length)lines.push(cur.join(' ').replace(/\s+/g,' ').trim());
+     pages.push(lines.filter(Boolean).join('\n'));setBar('fileBar',5+(i/pdf.numPages)*90);
+   }
+   rawText=pages.join('\n\n');
+ }else throw new Error('Formato no compatible. Usá PDF o TXT.');
+ if(!rawText.trim())throw new Error('El documento no contiene texto seleccionable.');
+ $('extractedText').textContent=rawText.trim().slice(0,1800)+(rawText.length>1800?'…':'');
+ $('fileBadge').textContent='Listo';$('fileBadge').className='badge badge-green';
+ setBar('fileBar',100);setFileStatus(`<i class="fa-solid fa-circle-check"></i> ${rawText.length.toLocaleString('es-AR')} caracteres extraídos.`,'success');
+ toast('Documento cargado correctamente');
+}
+$('fileInput').addEventListener('change',async e=>{if(!e.target.files[0])return;try{await extractFile(e.target.files[0])}catch(err){setFileStatus(`<i class="fa-solid fa-circle-exclamation"></i> ${err.message}`,'error');$('extractedText').textContent='No se pudo leer el archivo.';setBar('fileBar',0)}});
+['dragenter','dragover'].forEach(ev=>$('dropzone').addEventListener(ev,e=>{e.preventDefault();$('dropzone').classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>$('dropzone').addEventListener(ev,e=>{e.preventDefault();$('dropzone').classList.remove('drag')}));
+$('dropzone').addEventListener('drop',async e=>{const f=e.dataTransfer.files[0];if(!f)return;$('fileInput').files=e.dataTransfer.files;try{await extractFile(f)}catch(err){setFileStatus(`<i class="fa-solid fa-circle-exclamation"></i> ${err.message}`,'error')}});
+
+function splitText(text,max=60000){if(text.length<=max)return[text];let a=[],p=0;while(p<text.length){let e=Math.min(p+max,text.length);if(e<text.length){const cuts=[text.lastIndexOf('\\n\\n',e),text.lastIndexOf('\\n',e),text.lastIndexOf(' ',e)].filter(x=>x>p+max*.65);if(cuts.length)e=Math.max(...cuts)}a.push(text.slice(p,e));p=e}return a}
+function setResponse(text,empty=false){$('aiResponse').className='response'+(empty?' empty':'');$('aiResponse').textContent=empty?'':text}
+async function groqChat(messages,selectedModel,maxTokens=4096){
+ if(!apiKey)throw new Error('Ingresá primero tu clave de API de Groq.');
+ const models=[selectedModel,...CHAT_MODELS.filter(m=>m!==selectedModel)];let last='';
+ for(const model of models){
+  try{
+   const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages,temperature:.2,max_completion_tokens:maxTokens})});
+   let data={};try{data=await res.json()}catch{}
+   if(res.ok){const out=data?.choices?.[0]?.message?.content?.trim();if(!out)throw new Error('La IA no devolvió contenido.');return out}
+   last=`Código ${res.status}. ${data?.error?.message||JSON.stringify(data)}`;
+   if(res.status===403||res.status===429||/blocked|restricted|rate limit|permission|available/i.test(last))continue;
+   throw new Error(last)
+  }catch(err){last=err.message||String(err);if(/403|429|blocked|restricted|rate limit|permission/i.test(last))continue;throw err}
+ }
+ throw new Error('No se pudo obtener una respuesta con los modelos disponibles. '+last)
+}
+
+$('analyzeBtn').addEventListener('click',async()=>{
+ const prompt=$('userPrompt').value.trim();if(!apiKey){toast('Falta la clave de Groq');$('apiKey').focus();return}
+ if(!rawText){toast('Cargá primero un documento');return}if(!prompt){toast('Escribí una consulta');$('userPrompt').focus();return}
+ const btn=$('analyzeBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Procesando...';setResponse('Consultando a Groq…');
+ try{
+  const excerpt=rawText.slice(0,14000);
+  const full=`Basándote EXCLUSIVAMENTE en el siguiente texto de contexto, responde a la pregunta de forma clara y directa. Si el contexto no contiene la respuesta, indícalo en lugar de inventar información.\\n\\nCONTEXTO DEL DOCUMENTO:\\n${excerpt}\\n\\nCONSULTA DEL USUARIO:\\n${prompt}`;
+  const out=await groqChat([{role:'system',content:'Eres un asistente experto en analizar documentos. Sé preciso, claro y conciso. No inventes información.'},{role:'user',content:full}],$('modelSelect').value,4096);
+  setResponse(out);toast('Consulta completada');
+ }catch(err){setResponse('No se pudo obtener la respuesta.\\n\\n'+err.message);toast('Error al consultar Groq')}finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Procesar consulta'}
+});
+
+$('clearBtn').addEventListener('click',()=>{
+ $('fileInput').value='';rawText='';originalFile=null;$('extractedText').textContent='Ningún archivo cargado.';$('userPrompt').value='';
+ $('fileBadge').textContent='Esperando';$('fileBadge').className='badge badge-blue';setBar('fileBar',0);setFileStatus('<i class="fa-regular fa-circle"></i> Ningún archivo cargado.');
+ setResponse('',true);toast('Formulario limpiado');
+});
+
+$('copyAnswer').addEventListener('click',async()=>{const t=$('aiResponse').textContent.trim();if(!t){toast('No hay respuesta para copiar');return}try{await navigator.clipboard.writeText(t);toast('Respuesta copiada')}catch{toast('No se pudo copiar automáticamente')}});
+
+function openPrint(text,title='Respuesta de IA'){$('printBody').textContent=text;$('printDate').textContent=new Date().toLocaleString('es-AR');$('printModal').classList.add('show');document.querySelector('.print-head h2').textContent=title}
+$('printAnswer').addEventListener('click',()=>{const t=$('aiResponse').textContent.trim();if(!t||$('aiResponse').classList.contains('empty'))return toast('No hay respuesta para imprimir');openPrint(t)});
+$('closePrint').addEventListener('click',()=>$('printModal').classList.remove('show'));$('printBtn').addEventListener('click',()=>window.print());
+$('printModal').addEventListener('click',e=>{if(e.target===$('printModal'))$('printModal').classList.remove('show')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('printModal').classList.remove('show')});
+
+function setAnonStatus(t,type=''){const e=$('anonStatus');e.className='status '+type;e.innerHTML=t}
+$('anonBtn').addEventListener('click',async()=>{
+ if(!apiKey){toast('Ingresá la clave de Groq');$('apiKey').focus();return}
+ if(!rawText){toast('Cargá primero un documento');document.querySelector('[data-tab="analisis"]').click();return}
+ const btn=$('anonBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Anonimizando...';setBar('anonBar',5);
+ try{
+  const chunks=splitText(rawText,60000), out=[];
+  for(let i=0;i<chunks.length;i++){
+   setAnonStatus(`<i class="fa-solid fa-wand-magic-sparkles"></i> Procesando bloque ${i+1} de ${chunks.length}…`);
+   const prompt=`Procesá este bloque ${i+1} de ${chunks.length}. Devolvé solamente el bloque limpio.\\n\\n<BEGIN_DOCUMENT>\\n${chunks[i]}\\n<END_DOCUMENT>`;
+   out.push(await groqChat([{role:'system',content:SYSTEM_PROMPT},{role:'user',content:prompt}],$('modelSelect').value,8000));
+   setBar('anonBar',5+((i+1)/chunks.length)*90);
+  }
+  $('anonResult').textContent=out.join('\\n').trim();$('anonResultCard').classList.add('show');setBar('anonBar',100);
+  setAnonStatus('<i class="fa-solid fa-circle-check"></i> Documento anonimizado. Revisá el texto antes de exportar.','success');toast('Anonimización completada');
+  $('anonResultCard').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(err){setAnonStatus(`<i class="fa-solid fa-circle-exclamation"></i> ${err.message}`,'error');setBar('anonBar',0);toast('No se pudo anonimizar')}
+ finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> Anonimizar documento'}
+});
+$('anonClear').addEventListener('click',()=>{$('anonResult').textContent='';$('anonResultCard').classList.remove('show');setBar('anonBar',0);setAnonStatus('<i class="fa-regular fa-circle"></i> Listo para anonimizar.')});
+$('copyAnon').addEventListener('click',async()=>{const t=$('anonResult').innerText.trim();if(!t)return toast('No hay resultado');try{await navigator.clipboard.writeText(t);toast('Documento limpio copiado')}catch{toast('No se pudo copiar')}});
+
+function safeBase(){return(originalFile?.name||'documento').replace(/\\.pdf$/i,'').replace(/\\.txt$/i,'').replace(/[\\\\/:*?"<>|]/g,'_')}
+function escapeHTML(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+$('downloadPDF').addEventListener('click',()=>{
+ const text=$('anonResult').innerText.trim();if(!text)return toast('No hay resultado');
+ if(!window.jspdf)return toast('No se cargó el generador PDF');
+ const{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),ml=25,mr=25,mt=28,mb=25,w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight(),usable=w-ml-mr;
+ doc.setFont('times','normal');doc.setFontSize(12);let y=mt;
+ for(const para of text.replace(/\\r/g,'').split('\\n')){const lines=doc.splitTextToSize(para,usable);if(!lines.length){y+=6;continue}for(const line of lines){if(y>h-mb){doc.addPage();y=mt}doc.text(line,ml,y);y+=6.2}y+=2.2}
+ doc.save(safeBase()+'_limpio.pdf');toast('PDF generado');
+});
+$('downloadDOC').addEventListener('click',()=>{
+ const text=$('anonResult').innerText.trim();if(!text)return toast('No hay resultado');
+ const htmlDoc=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Documento limpio</title><style>body{font-family:Times New Roman,serif;font-size:12pt;line-height:1.6;margin:2.5cm}p{margin:0 0 10pt}</style></head><body>${escapeHTML(text).split('\\n').map(x=>'<p>'+x+'</p>').join('')}</body></html>`;
+ const blob=new Blob(['\\ufeff',htmlDoc],{type:'application/msword'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safeBase()+'_limpio.doc';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('DOC generado');
+});
+
+function updateAudioControls(){
+ const model=$('audioModel').value,vs=$('ttsVoice');vs.innerHTML='';const voices=ORPHEUS_VOICES[model]||[];
+ if(!voices.length){vs.disabled=true;vs.innerHTML='<option>Solo transcripción con Whisper</option>'}
+ else{vs.disabled=false;voices.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;vs.appendChild(o)})}
+ $('transcribeBtn').disabled=!!model.startsWith('canopylabs/');
+ $('speakBtn').disabled=!model.startsWith('canopylabs/');
+}
+$('audioModel').addEventListener('change',updateAudioControls);updateAudioControls();
+
+function audioStatus(t,type=''){const e=$('audioStatus');e.className='status '+type;e.innerHTML=t}
+$('transcribeBtn').addEventListener('click',async()=>{
+ if(!apiKey)return toast('Ingresá la clave de Groq');const file=$('audioInput').files[0];if(!file)return toast('Seleccioná un audio');
+ const model=$('audioModel').value;if(!model.startsWith('whisper-'))return toast('Elegí un modelo Whisper');
+ const b=$('transcribeBtn');b.disabled=true;b.innerHTML='<span class="spinner"></span> Transcribiendo...';audioStatus('<i class="fa-solid fa-spinner fa-spin"></i> Enviando audio a Groq…');
+ try{
+  const form=new FormData();form.append('file',file);form.append('model',model);form.append('response_format','json');
+  const res=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+apiKey},body:form});
+  let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(`Código ${res.status}. ${data?.error?.message||JSON.stringify(data)}`);
+  const t=(data.text||'').trim();if(!t)throw new Error('Whisper no devolvió una transcripción.');$('audioResult').value=t;audioStatus(`<i class="fa-solid fa-circle-check"></i> Transcripción lista: ${t.length.toLocaleString('es-AR')} caracteres.`,'success');toast('Transcripción completada')
+ }catch(err){audioStatus(`<i class="fa-solid fa-circle-exclamation"></i> ${err.message}`,'error');toast('Error de transcripción')}
+ finally{b.disabled=false;b.innerHTML='<i class="fa-solid fa-microphone-lines"></i> Transcribir con Whisper';updateAudioControls()}
+});
+$('speakBtn').addEventListener('click',async()=>{
+ if(!apiKey)return toast('Ingresá la clave de Groq');const model=$('audioModel').value;if(!model.startsWith('canopylabs/'))return toast('Elegí un modelo Orpheus');
+ const text=$('ttsText').value.trim();if(!text)return toast('Escribí el texto');if(text.length>200)return toast('Orpheus acepta como máximo 200 caracteres en este flujo');
+ const b=$('speakBtn');b.disabled=true;b.innerHTML='<span class="spinner"></span> Generando...';audioStatus('<i class="fa-solid fa-spinner fa-spin"></i> Generando voz…');
+ try{
+  const res=await fetch('https://api.groq.com/openai/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+apiKey},body:JSON.stringify({model,voice:$('ttsVoice').value,input:text,response_format:'wav'})});
+  if(!res.ok){let d='';try{const j=await res.json();d=j?.error?.message||JSON.stringify(j)}catch{d=await res.text()};throw new Error(`Código ${res.status}. ${d}`)}
+  const blob=await res.blob();if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(blob);$('audioPlayer').src=audioUrl;$('audioPlayer').classList.remove('hidden');
+  $('audioDownload').href=audioUrl;$('audioDownload').download=(model.includes('arabic')?'orpheus-arabic':'orpheus-english')+'.wav';$('audioDownload').classList.remove('hidden');audioStatus('<i class="fa-solid fa-circle-check"></i> Audio generado correctamente.','success');toast('Audio generado')
+ }catch(err){audioStatus(`<i class="fa-solid fa-circle-exclamation"></i> ${err.message}`,'error');toast('No se pudo generar el audio')}
+ finally{b.disabled=false;updateAudioControls()}
+});
+
+/* ===================== CONSULTA ESTRICTA DE JSON ===================== */
+let jsonRecords = [];
+let selectedCaseIds = new Set();
+
+function normalizeJSONRecords(payload, origen) {
+  const arr = Array.isArray(payload) ? payload : (
+    Array.isArray(payload?.data) ? payload.data :
+    Array.isArray(payload?.records) ? payload.records :
+    Array.isArray(payload?.expedientes) ? payload.expedientes : []
+  );
+  return arr.map((item, idx) => {
+    const data = (item && typeof item === 'object' && item.data && typeof item.data === 'object')
+      ? item.data : item;
+    return {
+      __id: String(item?.id ?? data?.id ?? `${origen}-${idx}`),
+      __origen: origen,
+      ...data
+    };
+  });
+}
+
+function jsonStringifySafe(obj) {
+  return JSON.stringify(obj, (k, v) => {
+    if (k === 'keywords') return Array.isArray(v) ? v : [];
+    return v;
+  }, 2);
+}
+
+function searchableCase(c) {
+  const fields = [
+    c.numCausa, c.caratula, c.datosNnya, c.nnyaGesell, c.juzgado,
+    c.usuarioAsignado, c.intervencion, c.tipoProceso, c.estado,
+    c.prioridad, c.observaciones, c.recursos, c.recursosContestacion,
+    c.estadoRecursos, c.detalleCostas, ...(Array.isArray(c.keywords) ? c.keywords : [])
+  ];
+  return fields.filter(v => v !== null && v !== undefined).join(' ').toLowerCase();
+}
+
+function formatCaseTitle(c) {
+  return `${c.numCausa || 'Sin número'} — ${c.caratula || 'Sin carátula'}`;
+}
+
+function renderCaseResults() {
+  const q = $('caseSearch').value.trim().toLowerCase();
+  const box = $('caseResults');
+  if (!jsonRecords.length) {
+    box.textContent = 'Cargá los JSON para habilitar las consultas.';
+    return;
+  }
+  if (!q) {
+    box.innerHTML = `Hay <strong>${jsonRecords.length.toLocaleString('es-AR')}</strong> expedientes cargados. Escribí una búsqueda.`;
+    return;
+  }
+  const terms = q.split(/\s+/).filter(Boolean);
+  const hits = jsonRecords.filter(c => terms.every(t => searchableCase(c).includes(t))).slice(0, 80);
+  if (!hits.length) {
+    box.textContent = 'No se encontraron expedientes con esos términos.';
+    return;
+  }
+  box.innerHTML = hits.map(c => {
+    const checked = selectedCaseIds.has(c.__id) ? 'checked' : '';
+    return `<label style="display:flex;align-items:flex-start;gap:9px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer">
+      <input type="checkbox" class="case-check" data-case-id="${escapeHTML(c.__id)}" ${checked} style="margin-top:3px">
+      <span><strong>${escapeHTML(formatCaseTitle(c))}</strong><br>
+      <small style="color:var(--muted)">${escapeHTML(c.tipoProceso || '')} · ${escapeHTML(c.juzgado || '')} · ${escapeHTML(c.__origen)}</small>
+      ${c.datosNnya ? `<br><small>NNyA: ${escapeHTML(String(c.datosNnya))}</small>` : ''}</span>
+    </label>`;
+  }).join('');
+  box.querySelectorAll('.case-check').forEach(ch => ch.addEventListener('change', e => {
+    const id = e.target.dataset.caseId;
+    if (e.target.checked) selectedCaseIds.add(id); else selectedCaseIds.delete(id);
+    renderSelectedCases();
+  }));
+}
+
+function renderSelectedCases() {
+  const selected = jsonRecords.filter(c => selectedCaseIds.has(c.__id));
+  $('selectedBadge').textContent = `${selected.length} seleccionado${selected.length === 1 ? '' : 's'}`;
+  $('selectedCases').innerHTML = selected.length
+    ? selected.map(c => `<div style="padding:8px 0;border-bottom:1px solid var(--line)">
+        <strong>${escapeHTML(formatCaseTitle(c))}</strong>
+        <div style="font-size:10px;color:var(--muted)">${escapeHTML(c.__origen)} · ${escapeHTML(c.juzgado || '')}</div>
+      </div>`).join('')
+    : 'No hay expedientes seleccionados.';
+}
+
+async function loadJSONFile(file, origen) {
+  const text = await file.text();
+  const payload = JSON.parse(text);
+  const records = normalizeJSONRecords(payload, origen);
+  if (!records.length) throw new Error(`El archivo ${file.name} no contiene un arreglo de expedientes reconocible.`);
+  return records;
+}
+
+async function refreshJSONFile(file, origen) {
+  try {
+    const records = await loadJSONFile(file, origen);
+    jsonRecords = jsonRecords.filter(c => c.__origen !== origen).concat(records);
+    $('jsonBadge').textContent = `${jsonRecords.length.toLocaleString('es-AR')} expedientes`;
+    $('jsonBadge').className = 'badge badge-green';
+    $('jsonStatus').className = 'status success';
+    $('jsonStatus').innerHTML = `<i class="fa-solid fa-circle-check"></i> ${jsonRecords.length.toLocaleString('es-AR')} expedientes cargados en memoria.`;
+    renderCaseResults();
+    renderSelectedCases();
+    toast(`${origen === 'nueva' ? 'JSON nuevo' : 'JSON histórico'} cargado`);
+  } catch (err) {
+    $('jsonStatus').className = 'status error';
+    $('jsonStatus').innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHTML(err.message)}`;
+  }
+}
+
+$('jsonNueva').addEventListener('change', e => {
+  if (e.target.files[0]) refreshJSONFile(e.target.files[0], 'nueva');
+});
+$('jsonHistorica').addEventListener('change', e => {
+  if (e.target.files[0]) refreshJSONFile(e.target.files[0], 'historica');
+});
+$('caseSearch').addEventListener('input', renderCaseResults);
+
+$('clearCaseSearch').addEventListener('click', () => {
+  $('caseSearch').value = '';
+  renderCaseResults();
+});
+
+$('caseClearBtn').addEventListener('click', () => {
+  selectedCaseIds.clear();
+  $('casePrompt').value = '';
+  renderCaseResults();
+  renderSelectedCases();
+  setCaseAnswer('', true);
+});
+
+function setCaseAnswer(text, empty=false) {
+  $('caseAnswer').className = 'response' + (empty ? ' empty' : '');
+  $('caseAnswer').textContent = empty ? '' : text;
+}
+
+function strictJSONSystemPrompt() {
+  return `Sos un asistente de consulta documental para expedientes judiciales.
+
+REGLA ABSOLUTA DE FUENTE:
+- SOLO podés utilizar los registros JSON incluidos en el mensaje del usuario.
+- NO uses conocimiento jurídico externo, internet, memoria del modelo, suposiciones ni patrones aprendidos para completar información.
+- NO inventes nombres, fechas, estados, actuaciones, audiencias, recursos, opiniones, hechos ni relaciones.
+- Una ausencia de un campo, un campo null, una cadena vacía o un arreglo vacío significa que ESE DATO NO CONSTA en la fuente.
+- No conviertas una inferencia en un hecho.
+- Si la pregunta no puede responderse íntegramente con la fuente, indicá exactamente qué parte no consta.
+- Si la fuente contiene datos contradictorios entre registros, señalá la contradicción y no la resuelvas por tu cuenta.
+- No agregues leyes, artículos, jurisprudencia ni recomendaciones jurídicas salvo que aparezcan literalmente en los JSON.
+- Podés resumir o explicar únicamente información que esté explícitamente presente en los registros.
+
+FORMATO OBLIGATORIO:
+Respondé en JSON válido con esta estructura:
+{
+  "respuesta": "respuesta breve y clara basada solo en la fuente",
+  "fuente_suficiente": true,
+  "evidencias": [
+    {"expediente": "número de causa", "campo": "nombre exacto del campo", "dato": "valor copiado o resumido fielmente desde ese campo"}
+  ],
+  "faltantes": ["datos que la fuente no contiene y serían necesarios para responder"]
+}
+
+Si la fuente no permite responder, "fuente_suficiente" debe ser false y "respuesta" debe decir: "No consta en los JSON cargados." seguido, si corresponde, de qué información sí consta.
+Las evidencias deben corresponder únicamente a datos presentes en los JSON.`;
+}
+
+$('caseAskBtn').addEventListener('click', async () => {
+  const prompt = $('casePrompt').value.trim();
+  const selected = jsonRecords.filter(c => selectedCaseIds.has(c.__id));
+  if (!apiKey) return toast('Ingresá la clave de Groq');
+  if (!jsonRecords.length) return toast('Cargá al menos un JSON');
+  if (!selected.length) return toast('Seleccioná al menos un expediente');
+  if (!prompt) return toast('Escribí una pregunta');
+
+  const btn = $('caseAskBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Verificando fuente...';
+  setCaseAnswer('Analizando exclusivamente los registros seleccionados…');
+
+  try {
+    // Nunca se envía el corpus completo: solo los expedientes seleccionados.
+    const source = selected.map(c => {
+      const copy = {...c};
+      delete copy.__id;
+      delete copy.__origen;
+      return {origen: c.__origen, id: c.__id, expediente: copy};
+    });
+
+    const userContent = `FUENTE PRIMARIA — NO HAY OTRA FUENTE AUTORIZADA:
+${jsonStringifySafe(source)}
+
+PREGUNTA:
+${prompt}`;
+
+    const out = await groqChat([
+      {role:'system', content: strictJSONSystemPrompt()},
+      {role:'user', content: userContent}
+    ], $('modelSelect').value, 5000);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(out.replace(/^```json\s*/i,'').replace(/\s*```$/,'').trim());
+    } catch {
+      // Si el modelo incumple el formato, no mostramos una respuesta que no pueda auditarse.
+      throw new Error('La IA no devolvió el formato de evidencia exigido. La respuesta fue descartada para evitar una posible alucinación.');
+    }
+
+    if (!parsed || typeof parsed.respuesta !== 'string' || !Array.isArray(parsed.evidencias)) {
+      throw new Error('La respuesta no contiene evidencias verificables y fue descartada.');
+    }
+
+    // Control local: cada evidencia debe mencionar un expediente seleccionado.
+    const validIds = new Set(selected.map(c => String(c.numCausa || c.__id)));
+    const validEvidence = parsed.evidencias.filter(e => e && typeof e === 'object' &&
+      [...validIds].some(id => String(e.expediente || '').includes(id)) &&
+      typeof e.dato === 'string' && e.dato.trim());
+
+    let finalText = parsed.respuesta.trim();
+    finalText += `\n\nFUENTE: ${selected.length} expediente${selected.length === 1 ? '' : 's'} seleccionado${selected.length === 1 ? '' : 's'}.`;
+    if (parsed.fuente_suficiente === false) {
+      finalText += '\n\n⚠️ ' + (Array.isArray(parsed.faltantes) && parsed.faltantes.length
+        ? `No consta en los JSON: ${parsed.faltantes.join('; ')}`
+        : 'No consta en los JSON cargados.');
+    }
+    if (validEvidence.length) {
+      finalText += '\n\nEVIDENCIAS EN LA FUENTE:\n' + validEvidence.map(e =>
+        `• ${e.expediente} — ${e.campo || 'campo'}: ${e.dato}`
+      ).join('\n');
+    } else {
+      finalText += '\n\n⚠️ No se pudieron validar evidencias contra los expedientes seleccionados. La respuesta fue marcada como no verificable.';
+    }
+
+    setCaseAnswer(finalText);
+    toast('Consulta completada con control de fuente');
+  } catch (err) {
+    setCaseAnswer('RESPUESTA DESCARTADA\n\n' + err.message);
+    toast('Consulta no verificable');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Consultar solo los JSON';
+  }
+});
+
+$('copyCaseAnswer').addEventListener('click', async () => {
+  const t = $('caseAnswer').textContent.trim();
+  if (!t || $('caseAnswer').classList.contains('empty')) return toast('No hay respuesta');
+  try { await navigator.clipboard.writeText(t); toast('Respuesta copiada'); }
+  catch { toast('No se pudo copiar'); }
+});
+/* =================== FIN CONSULTA ESTRICTA DE JSON =================== */
+
+</script>
+
+setApiState();
+</script>
+</body>
+</html>
