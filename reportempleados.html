@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reporte Estadístico por Empleado · Pase Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+:root{--ok:#10b981;--acc:#06b6d4;--warn:#f59e0b;--bad:#ef4444;--bg:#f1f5f9;--sf:#fff;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;background-image:radial-gradient(circle at 0 0,rgba(16,185,129,.06),transparent 40%),radial-gradient(circle at 100% 100%,rgba(6,182,212,.07),transparent 40%)}
+.wrap{max-width:1600px;margin:0 auto;padding:20px}
+.hd{background:linear-gradient(135deg,#f8fdfa,#e9f8f0);border:1px solid #cfeedd;border-radius:24px;padding:1.2rem 2rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.2rem}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--acc),var(--ok));display:grid;place-items:center;color:#fff;font-size:1.5rem;box-shadow:0 8px 24px rgba(6,182,212,.35)}
+h1{font-size:1.3rem;font-weight:800;color:#064e3b;letter-spacing:-.3px}
+h1 small{display:block;font-size:.72rem;font-weight:500;color:var(--mu);margin-top:2px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+select,button{font:inherit;font-size:.8rem;font-weight:600;padding:9px 16px;border-radius:40px;border:1px solid #cfeedd;background:#fff;color:#064e3b;cursor:pointer}
+button:hover{background:#ecfdf5;border-color:var(--ok)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.live{font-size:.72rem;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:6px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--warn)}.live.on i{background:var(--ok);box-shadow:0 0 0 4px rgba(16,185,129,.2)}.live.err i{background:var(--bad)}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:20px;box-shadow:0 4px 16px rgba(15,23,42,.06);padding:1.3rem 1.6rem;margin-bottom:1.2rem}
+.ct{font-weight:800;font-size:1rem;margin-bottom:.9rem;padding-bottom:.6rem;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.ct span{font-size:.72rem;font-weight:600;color:var(--mu)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:30px;border:1.5px solid var(--bd);font-size:.74rem;font-weight:700;cursor:pointer;background:#fff;color:var(--mu);transition:.15s;user-select:none}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip.on{border-color:var(--c);color:var(--tx);background:color-mix(in srgb,var(--c) 10%,#fff)}
+.chip.off i{opacity:.3}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{border:1px solid var(--bd);border-top:3px solid var(--k,var(--ok));border-radius:14px;padding:.9rem;text-align:center}
+.kpi b{display:block;font-size:1.6rem;font-weight:800;color:var(--k,var(--ok))}
+.kpi span{font-size:.64rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}
+.kpi small{display:block;font-size:.66rem;font-weight:600;color:var(--mu);margin-top:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:1.2rem}
+.grid .card{margin:0}
+.cw{position:relative;height:320px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{background:#f8fafc;font-size:.64rem;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);padding:10px;text-align:center;border-bottom:2px solid var(--bd);white-space:nowrap}
+td{padding:10px;text-align:center;border-bottom:1px solid var(--bd);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tbody tr{cursor:pointer}tbody tr:hover{background:#f0fdf4}tbody tr.sel{background:#ecfdf5}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--c)}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800}
+.g{background:#d1fae5;color:#065f46}.a{background:#fef3c7;color:#92400e}.r{background:#fecaca;color:#991b1b}.n{background:#f1f5f9;color:var(--mu)}
+.two{display:grid;grid-template-columns:2fr 1fr;gap:1.2rem;margin-top:1rem}
+@media(max-width:900px){.two{grid-template-columns:1fr}.wrap{padding:12px}}
+.nv{display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap}.nv div{flex:1;min-width:70px;text-align:center;border:1px solid var(--bd);border-radius:12px;padding:8px;font-size:.66rem;font-weight:700;color:var(--mu)}.nv b{display:block;font-size:1.2rem;color:var(--tx)}
+.empty{padding:2rem;text-align:center;color:var(--mu);font-weight:600}
+.cn{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+.cn div{border:1px solid var(--bd);border-left:4px solid var(--k);border-radius:14px;padding:.9rem 1rem}
+.cn small{display:block;font-size:.64rem;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}
+.cn b{display:block;font-size:.92rem;margin:.35rem 0 .15rem}.cn span{font-size:.74rem;color:var(--mu);font-weight:600}
+.txt{margin-top:1.1rem;background:#f8fafc;border:1px solid var(--bd);border-radius:14px;padding:1rem 1.3rem;font-size:.88rem;line-height:1.75}
+.txt p+p{margin-top:.7rem}.nota{font-size:.7rem;color:var(--mu);margin-top:.8rem}
+.warn{color:#92400e}
+@media print{.acts,.chips,button,select{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="brand"><div class="logo">📈</div>
+      <h1>Reporte Estadístico por Empleado<small>Defensoría Oficial Civil y Comercial 6 · Pase Digital</small></h1></div>
+    <div class="acts">
+      <span class="live" id="live"><i></i><b id="liveTxt">Conectando…</b></span>
+      <select id="rango" aria-label="Período"><option value="all">Todo el historial</option><option value="6">Últimos 6 meses</option><option value="12" selected>Últimos 12 meses</option><option value="24">Últimos 24 meses</option></select>
+      <button onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+
+  <div class="card"><div class="ct">Empleados a comparar <span>Tocá un nombre para mostrarlo u ocultarlo en los gráficos</span></div>
+    <div class="chips" id="chips"></div></div>
+
+  <div class="card"><div class="ct">Resumen del equipo <span id="subT"></span></div><div class="kpis" id="kpiT"></div><div class="nota warn" id="calidad"></div></div>
+
+  <div class="grid">
+    <div class="card"><div class="ct">Expedientes asignados por mes <span>Carga de trabajo</span></div><div class="cw"><canvas id="c1"></canvas></div></div>
+    <div class="card"><div class="ct">Expedientes finalizados por mes <span>Productividad</span></div><div class="cw"><canvas id="c2"></canvas></div></div>
+    <div class="card"><div class="ct">% de finalizados en plazo por mes <span>Sobre los finalizados de cada mes</span></div><div class="cw"><canvas id="c3"></canvas></div></div>
+    <div class="card"><div class="ct">Días hábiles promedio de resolución <span>Menor es mejor</span></div><div class="cw"><canvas id="c4"></canvas></div></div>
+  </div>
+
+  <div class="card" style="margin-top:1.2rem"><div class="ct">Comparativa general <span>Tocá una fila para ver el detalle del empleado</span></div>
+    <div class="tw"><table><thead><tr><th>Empleado</th><th>Total</th><th>En proceso</th><th>Para finalizar</th><th>Finalizadas</th><th>En plazo</th><th title="Finalizados en plazo ÷ (finalizados + abiertos con plazo vencido)">% Cumpl. (c/ demora)</th><th title="Abiertos con plazo vencido + finalizados fuera de plazo">Con demora</th><th>Prom. días háb.</th><th>Nuevo Patrocinio</th><th>NP Violencia Fam.</th></tr></thead><tbody id="tb"></tbody></table></div></div>
+
+  <div class="card" id="concl"></div>
+  <div class="card" id="dem"></div>
+  <div class="card" id="det"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ 1. CONFIGURACIÓN ============ */
+firebase.initializeApp({apiKey:"AIzaSyBiPiBIUTecqjifyZBqbrNw8aQNv7rwqwA",authDomain:"pasedefensoria6.firebaseapp.com",projectId:"pasedefensoria6",storageBucket:"pasedefensoria6.firebasestorage.app",messagingSenderId:"785250989941",appId:"1:785250989941:web:1bfb35a5f954144dbb853c"});
+const db=firebase.firestore();
+
+const NIV={1:5,2:3,3:3,4:2};              /* nivel → días hábiles de plazo */
+const HORA_INICIO=7,HORA_CORTE=12;        /* asignado después de las 12 → cuenta desde el día hábil siguiente; vence a las 12 */
+const EXTRA={2026:[[11,9],[11,16],[12,7]]}; /* días no laborables adicionales [mes,día]. Completar para otros años */
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const EMPS=[['emp1','Bazante Nadia Romina'],['emp2','Bolillat Cesar Enrique'],['emp3','Cardozo Maria Raquel'],['emp4','Cedron Noelia'],['emp6','Fioravante Rómulo'],['emp7','Gonzalez Alberto Misael'],['emp8','Gonzalez Juan Jose'],['emp9','Gudiño Natalia Esther'],['emp15','Martinis Carlos Esteban'],['emp10','Ortega Lucia Noemi'],['emp11','Pablos Patricia Tamara'],['emp12','Palacios Ana Gabriela'],['emp13','Sosa Rita Cecilia']]
+  .map(([id,nombre],i)=>({id,nombre,corto:nombre.split(' ').slice(0,2).join(' '),color:`hsl(${(i*137.5)%360} 68% 46%)`}));
+
+/* ============ 2. UTILIDADES ============ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const toDate=v=>{if(v==null||v==='')return null;const d=typeof v.toDate==='function'?v.toDate():new Date(v);return isNaN(d)?null:d};
+const mk=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+const lbl=k=>{const[y,m]=k.split('-');return `${MES[+m-1]} ${y.slice(2)}`};
+const PCT=v=>v==null?'—':Math.round(v)+'%';
+const NUM=(v,d=1)=>v==null?'—':v.toFixed(d);
+const cls=v=>v==null?'n':v>=80?'g':v>=60?'a':'r';
+const pl=n=>`${n} expediente${n===1?'':'s'}`;
+
+/* ============ 3. CALENDARIO (días hábiles) ============ */
+function pascua(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),dd=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,dd)}
+const FC={};
+function feriados(y){
+  if(FC[y])return FC[y];
+  const s=new Set(),add=d=>s.add(d.getMonth()*100+d.getDate());
+  /* fijos (incluye 20/6 Belgrano, que faltaba) */
+  [[1,1],[3,24],[4,2],[5,1],[5,25],[6,20],[7,9],[12,8],[12,25]].forEach(([m,d])=>add(new Date(y,m-1,d)));
+  /* móviles por Pascua: Carnaval = lunes y martes (-48/-47; antes tomaba martes y miércoles de ceniza), Jueves y Viernes Santo */
+  const p=pascua(y);[-48,-47,-3,-2].forEach(o=>{const d=new Date(p);d.setDate(d.getDate()+o);add(d)});
+  /* trasladables (Ley 27.399): martes/miércoles → lunes anterior; jueves/viernes → lunes siguiente */
+  [[6,17],[8,17],[10,12],[11,20]].forEach(([m,d])=>{const f=new Date(y,m-1,d),w=f.getDay();if(w===2||w===3)f.setDate(f.getDate()-(w-1));else if(w===4||w===5)f.setDate(f.getDate()+(8-w));add(f)});
+  (EXTRA[y]||[]).forEach(([m,d])=>add(new Date(y,m-1,d)));
+  return FC[y]=s;
+}
+const esHabil=d=>{const w=d.getDay();return w>0&&w<6&&!feriados(d.getFullYear()).has(d.getMonth()*100+d.getDate())};
+function sumarHab(fi,n){const f=new Date(fi);let k=0;while(k<n){f.setDate(f.getDate()+1);if(esHabil(f))k++}return f}
+function habiles(fi,ff){const ini=new Date(fi),fin=ff?new Date(ff):new Date();if(ini>fin)return 0;let d=0,c=new Date(ini);while(!esHabil(c)&&c<=fin)c.setDate(c.getDate()+1);while(c<=fin){if(esHabil(c))d++;c.setDate(c.getDate()+1)}return d}
+function inicio(a){const f=new Date(a);if(f.getHours()>HORA_CORTE||(f.getHours()===HORA_CORTE&&f.getMinutes()>0))f.setDate(f.getDate()+1);while(!esHabil(f))f.setDate(f.getDate()+1);f.setHours(HORA_INICIO,0,0,0);return f}
+
+/* ============ 4. DOMINIO: expedientes y KPIs ============ */
+function fAsig(c){
+  const d=toDate(c.fechaAsignacion);if(d)return d;
+  const h=c.historial||[];
+  for(let i=h.length-1;i>=0;i--)if(/Asignad/i.test(h[i]?.accion||'')){const f=toDate(h[i].fecha);if(f)return f}
+  return null;
+}
+function plazo(c){
+  const a=fAsig(c);if(!a)return null;
+  const ini=inicio(a),n=parseInt(c.nivelSecretario||c.nivelOperador)||1,lim=sumarHab(ini,NIV[n]||5);
+  lim.setHours(HORA_CORTE,0,0,0);
+  return{a,ini,lim,n};
+}
+function categoria(c){
+  const n=norm([c.tipo,c.subtipo,c.materia,c.categoria,c.clase].filter(Boolean).join(' '));
+  if(!/(nuevo\s*patrocinio|patrocinio\s*nuevo)/.test(n))return '';
+  return /violencia/.test(n)?'npvf':'np';
+}
+function buscarEmp(v){if(!v)return null;const n=norm(v).trim();return EMPS.find(x=>x.id===v||norm(x.nombre).trim()===n)||null}
+
+/* Convierte un documento de Firestore en una fila lista para calcular KPIs */
+function enriquecer(c){
+  const e=[c.empleadoAsignado,c.empleadoId,c.empleadoOriginal].map(buscarEmp).find(Boolean);if(!e)return null;
+  const p=plazo(c),r={num:c.numero,emp:e.id,estado:c.estado,tipo:c.tipo||'Sin especificar',cat:categoria(c),nivel:p?p.n:(parseInt(c.nivelSecretario||c.nivelOperador)||1),am:p?mk(p.a):null};
+  if(!p)return r;
+  if(c.estado==='finalizada'){
+    const f=toDate(c.fechaFinalizacion)||toDate(c.fechaResolucionEmpleado);
+    if(f){r.fm=mk(f);r.ok=f<=p.lim;r.dias=habiles(p.ini,f);if(!r.ok)r.at=Math.max(habiles(p.lim,f)-1,0)}
+  }else if(c.estado==='en_proceso'){
+    const h=new Date(),l=new Date(p.lim);h.setHours(0,0,0,0);l.setHours(0,0,0,0);
+    r.dem=h>l;if(r.dem)r.at=Math.max(habiles(p.lim,new Date())-1,1);
+  }
+  return r;
+}
+
+/* KPIs de una lista de expedientes (se usa igual para equipo, empleado y tipo de causa) */
+function stats(l){
+  const fin=l.filter(r=>r.estado==='finalizada'),fc=fin.filter(r=>r.fm),ok=fc.filter(r=>r.ok).length;
+  const dem=l.filter(r=>r.dem).length,base=fc.length+dem;       /* base = finalizados + abiertos con plazo vencido */
+  const dl=l.filter(r=>r.at!=null),atSum=dl.reduce((s,r)=>s+r.at,0);
+  return{total:l.length,proc:l.filter(r=>r.estado==='en_proceso').length,pf:l.filter(r=>r.estado==='para_finalizar'||r.estado==='en_secretaria').length,
+    fin:fin.length,fc:fc.length,ok,base,dem,late:fc.length-ok,pct:base?ok/base*100:null,
+    prom:fc.length?fc.reduce((s,r)=>s+r.dias,0)/fc.length:null,
+    nat:dl.length,atSum,atProm:dl.length?atSum/dl.length:null,
+    mayor:dl.length?dl.reduce((a,r)=>r.at>a.at?r:a):null,menor:dl.length?dl.reduce((a,r)=>r.at<a.at?r:a):null,
+    np:l.filter(r=>r.cat==='np').length,vf:l.filter(r=>r.cat==='npvf').length};
+}
+const porMes={
+  asig:(l,m)=>l.filter(r=>r.am===m).length,
+  fin:(l,m)=>l.filter(r=>r.fm===m).length,
+  ok:(l,m)=>l.filter(r=>r.fm===m&&r.ok).length,
+  pct:(l,m)=>{const x=l.filter(r=>r.fm===m);return x.length?x.filter(r=>r.ok).length/x.length*100:null},
+  prom:(l,m)=>{const x=l.filter(r=>r.fm===m&&r.dias!=null);return x.length?+(x.reduce((s,r)=>s+r.dias,0)/x.length).toFixed(1):null}
+};
+
+/* ============ 5. ESTADO ============ */
+let rows=[],M=[],PER=new Set(),SIN=0,sel=new Set(EMPS.map(e=>e.id)),detId=null;const charts={};
+const delEmp=id=>rows.filter(r=>r.emp===id);
+const enPeriodo=l=>l.filter(r=>r.am?PER.has(r.am):$('rango').value==='all');
+const statsEmps=()=>EMPS.map(e=>({e,s:stats(enPeriodo(delEmp(e.id)))})).filter(x=>x.s.total);
+function meses(){
+  const n=$('rango').value,ks=[...new Set(rows.flatMap(r=>[r.am,r.fm]).filter(Boolean))].sort();if(!ks.length)return[];
+  let[y,m]=ks[0].split('-').map(Number),ey,em;
+  if(n==='all')[ey,em]=ks[ks.length-1].split('-').map(Number);
+  else{const h=new Date();ey=h.getFullYear();em=h.getMonth()+1}    /* "últimos N meses" termina en el mes actual */
+  const out=[];while(y<ey||(y===ey&&m<=em)){out.push(`${y}-${String(m).padStart(2,'0')}`);if(++m>12){m=1;y++}}
+  return n==='all'?out:out.slice(-parseInt(n));
+}
+
+/* ============ 6. VISTAS ============ */
+const pill=(c,t)=>`<span class="pill ${c}">${t}</span>`;
+const dot=e=>`<span class="dot" style="--c:${e.color}"></span>`;
+const kpi=(l,v,c,sub)=>`<div class="kpi" style="--k:${c}"><b>${v}</b><span>${l}</span>${sub?`<small>${sub}</small>`:''}</div>`;
+const kpis=(s,t,col,ext)=>[
+  kpi('Total',s.total,col||'#0f172a'),kpi('En proceso',s.proc,'#3b82f6'),kpi('Para finalizar',s.pf,'#f59e0b'),kpi('Finalizadas',s.fin,'#10b981'),
+  kpi('% Cumpl. c/ demora',PCT(s.pct),'#06b6d4',t&&`Equipo: ${PCT(t.pct)}`),
+  kpi('Con demora',s.nat,'#ef4444',`${s.dem} abiertos · ${s.late} finalizados`),
+  kpi('Prom. días háb.',NUM(s.prom),'#8b5cf6',t&&`Equipo: ${NUM(t.prom)}`),
+  ...(ext?[kpi('Nuevo Patrocinio',s.np,'#06b6d4'),kpi('NP Violencia Fam.',s.vf,'#8b5cf6'),kpi('Atraso prom. (d háb.)',NUM(s.atProm),'#ef4444')]:[])
+].join('');
+const killChart=id=>{if(charts[id]){charts[id].destroy();delete charts[id]}};
+
+Chart.defaults.font.family="'Plus Jakarta Sans',sans-serif";Chart.defaults.font.size=11;
+function dibujar(id,datasets,opt={}){
+  killChart(id);
+  charts[id]=new Chart($(id),{type:'line',data:{labels:M.map(lbl),datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8}},tooltip:{padding:10,itemSort:(a,b)=>(b.parsed.y??-1)-(a.parsed.y??-1),callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y==null?'—':c.parsed.y.toFixed(opt.dec??0)}${opt.suf||''}`}}},
+    scales:{y:{beginAtZero:true,max:opt.max,grid:{color:'#eef2f6'},ticks:{precision:opt.dec?undefined:0,callback:v=>v+(opt.suf||'')}},x:{grid:{display:false}}}}});
+}
+const serieEmp=fn=>EMPS.filter(e=>sel.has(e.id)).map(e=>({label:e.corto,data:M.map(m=>fn(delEmp(e.id),m)),borderColor:e.color,backgroundColor:e.color,tension:.3,borderWidth:2.2,pointRadius:3,pointHoverRadius:6,spanGaps:true}));
+
+function renderChips(){
+  $('chips').innerHTML=EMPS.map(e=>`<span class="chip ${sel.has(e.id)?'on':'off'}" style="--c:${e.color}" data-id="${e.id}"><i></i>${esc(e.corto)}</span>`).join('')+`<button id="bAll">Todos</button><button id="bNone">Ninguno</button>`;
+  $('chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{sel.has(c.dataset.id)?sel.delete(c.dataset.id):sel.add(c.dataset.id);renderChips();renderGraficos()});
+  $('bAll').onclick=()=>{sel=new Set(EMPS.map(e=>e.id));renderChips();renderGraficos()};
+  $('bNone').onclick=()=>{sel=new Set();renderChips();renderGraficos()};
+}
+function renderGraficos(){
+  dibujar('c1',serieEmp(porMes.asig));
+  dibujar('c2',serieEmp(porMes.fin));
+  dibujar('c3',serieEmp(porMes.pct),{suf:'%',max:100});
+  dibujar('c4',serieEmp(porMes.prom),{dec:1});
+}
+function renderKPIs(){
+  $('subT').textContent=`Expedientes asignados en el período · ${M.length?lbl(M[0])+' a '+lbl(M[M.length-1]):'sin datos'}`;
+  $('kpiT').innerHTML=kpis(stats(enPeriodo(rows)));
+  const sinF=rows.filter(r=>!r.am).length,finSF=rows.filter(r=>r.estado==='finalizada'&&r.am&&!r.fm).length,q=[];
+  if(SIN)q.push(`${pl(SIN)} sin empleado reconocido`);
+  if(sinF)q.push(`${pl(sinF)} sin fecha de asignación (solo cuentan en "Todo el historial")`);
+  if(finSF)q.push(`${pl(finSF)} finalizado${finSF===1?'':'s'} sin fecha de finalización (no entran al % de cumplimiento)`);
+  $('calidad').innerHTML=q.length?'⚠️ Calidad de datos: '+q.join(' · '):'';
+}
+function renderTabla(){
+  const data=statsEmps().sort((a,b)=>b.s.total-a.s.total);
+  $('tb').innerHTML=data.length?data.map(({e,s})=>`<tr data-id="${e.id}" class="${detId===e.id?'sel':''}"><td>${dot(e)}${e.nombre}</td><td>${s.total}</td><td>${s.proc}</td><td>${s.pf}</td><td>${s.fin}</td><td>${s.ok}</td><td>${pill(cls(s.pct),PCT(s.pct))}</td><td>${pill(s.nat?'r':'g',s.nat)}</td><td>${NUM(s.prom)}</td><td>${s.np}</td><td>${s.vf}</td></tr>`).join('')
+    :'<tr><td colspan="11" class="empty">Sin expedientes en el período</td></tr>';
+  $('tb').querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{detId=tr.dataset.id;renderTabla();renderDetalle();$('det').scrollIntoView({behavior:'smooth',block:'start'})});
+}
+function renderDetalle(){
+  const box=$('det'),opts=EMPS.map(e=>`<option value="${e.id}"${e.id===detId?' selected':''}>${e.nombre}</option>`).join('');
+  const selHtml=`<select id="selD" aria-label="Empleado"><option value="">Elegir empleado…</option>${opts}</select>`;
+  const bind=()=>$('selD').onchange=ev=>{detId=ev.target.value||null;renderTabla();renderDetalle()};
+  if(!detId){killChart('cD');box.innerHTML=`<div class="ct">Detalle individual ${selHtml}</div><div class="empty">Elegí un empleado (o tocá una fila de la tabla) para ver su reporte detallado.</div>`;bind();return}
+  const e=EMPS.find(x=>x.id===detId),all=delEmp(e.id),l=enPeriodo(all),s=stats(l),t=stats(enPeriodo(rows));
+  const act=EMPS.filter(x=>delEmp(x.id).length).length||1;
+  const tipos={};l.forEach(r=>(tipos[r.tipo]??=[]).push(r));
+  const filas=Object.entries(tipos).sort((a,b)=>b[1].length-a[1].length).map(([tp,xs])=>{const z=stats(xs);return `<tr style="cursor:default"><td>${esc(tp)}</td><td>${z.total}</td><td>${z.fin}</td><td>${pill(cls(z.pct),PCT(z.pct))}</td></tr>`}).join('');
+  const niv=[1,2,3,4].map(n=>l.filter(r=>r.nivel===n).length);
+  box.innerHTML=`<div class="ct"><span style="font-size:1rem;font-weight:800;color:var(--tx)">${dot(e)}${e.nombre}</span>${selHtml}</div>
+  <div class="kpis">${kpis(s,t,e.color,true)}</div>
+  <div class="two"><div><div class="cw"><canvas id="cD"></canvas></div></div>
+  <div><h6 style="font-size:.8rem;font-weight:800;margin-bottom:.5rem">Por tipo de causa</h6><div class="tw"><table><thead><tr><th>Tipo</th><th>Total</th><th>Finaliz.</th><th>% Cumpl.</th></tr></thead><tbody>${filas||'<tr><td colspan="4" class="empty">Sin expedientes</td></tr>'}</tbody></table></div>
+  <h6 style="font-size:.8rem;font-weight:800;margin:1rem 0 0">Por nivel</h6><div class="nv">${niv.map((n,i)=>`<div><b>${n}</b>Nivel ${i+1} · ${NIV[i+1]}d</div>`).join('')}</div></div></div>`;
+  bind();
+  const base={borderWidth:2.4,tension:.3,pointRadius:3.5,pointHoverRadius:6,spanGaps:true};
+  dibujar('cD',[
+    {...base,label:'Asignados',data:M.map(m=>porMes.asig(all,m)),borderColor:e.color,backgroundColor:e.color},
+    {...base,label:'Finalizados',data:M.map(m=>porMes.fin(all,m)),borderColor:'#10b981',backgroundColor:'#10b981'},
+    {...base,label:'Finalizados en plazo',data:M.map(m=>porMes.ok(all,m)),borderColor:'#06b6d4',backgroundColor:'#06b6d4'},
+    {...base,label:'Promedio del equipo (finalizados)',data:M.map(m=>+(rows.filter(r=>r.fm===m).length/act).toFixed(1)),borderColor:'#94a3b8',backgroundColor:'#94a3b8',borderDash:[6,5],pointRadius:0}
+  ],{dec:1});
+}
+function renderDemoras(){
+  const data=statsEmps().sort((a,b)=>b.s.nat-a.s.nat||b.s.atSum-a.s.atSum);
+  const cel=r=>r?`<b>Exp. ${esc(r.num)}</b><br><span style="font-size:.7rem;color:var(--mu)">${r.at} d háb. · ${r.dem?'abierto vencido':'finalizado tarde'}</span>`:'<span style="color:var(--mu)">Sin demoras</span>';
+  $('dem').innerHTML=`<div class="ct">Informe de demoras por empleado <span>Mayor y menor demora individual · días hábiles de atraso sobre el plazo del nivel</span></div>
+  <div class="tw"><table><thead><tr><th>Empleado</th><th>Abiertos vencidos</th><th>Finalizados fuera de plazo</th><th>Total demorados</th><th>Atraso total (d háb.)</th><th>Atraso promedio (d háb.)</th><th>Mayor demora</th><th>Menor demora</th></tr></thead><tbody>${data.length?data.map(({e,s})=>`<tr style="cursor:default"><td>${dot(e)}${e.nombre}</td><td>${pill(s.dem?'r':'g',s.dem)}</td><td>${s.late}</td><td><b>${s.nat}</b></td><td>${s.atSum}</td><td>${NUM(s.atProm)}</td><td>${cel(s.mayor)}</td><td>${cel(s.menor)}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin expedientes en el período</td></tr>'}</tbody></table></div>`;
+}
+function renderConclusion(){
+  const box=$('concl'),per0=$('rango').selectedOptions[0].text,lp=enPeriodo(rows),per=statsEmps();
+  if(!per.length){box.innerHTML='<div class="ct">Conclusión según Base de Datos</div><div class="empty">Sin expedientes en el período seleccionado.</div>';return}
+  const tot=per.reduce((a,x)=>a+x.s.total,0);
+  const rp=x=>x.s.pct==null?null:Math.round(x.s.pct);          /* mismo redondeo que se ve en pantalla: igual % = empate */
+  const ext=(f,max,req)=>{const c=req?per.filter(req):per;if(!c.length)return null;const v=c.map(f),t=max?Math.max(...v):Math.min(...v);return c.filter((_,i)=>v[i]===t)};
+  const conPct=x=>rp(x)!=null;
+  const R={asig:ext(x=>x.s.total,1),menC:ext(rp,0,conPct),mejC:ext(rp,1,conPct),npMax:ext(x=>x.s.np,1),npMin:ext(x=>x.s.np,0),vfMax:ext(x=>x.s.vf,1),vfMin:ext(x=>x.s.vf,0),mayD:ext(x=>x.s.nat,1),menD:ext(x=>x.s.nat,0)};
+  const w=(n,t)=>n===1?t:t+'s';
+  const dA=x=>`${pl(x.s.total)} · ${(x.s.total/tot*100).toFixed(0)}% del equipo`;
+  const dC=x=>`${rp(x)}% · ${x.s.ok} en plazo de ${x.s.base} ${w(x.s.base,'evaluado')}: ${x.s.fc} ${w(x.s.fc,'finalizado')} + ${x.s.dem} ${w(x.s.dem,'abierto')} ${w(x.s.dem,'vencido')}`;
+  const dK=k=>x=>pl(x.s[k]);
+  const dD=x=>x.s.nat?`${pl(x.s.nat)} demorado${x.s.nat===1?'':'s'} · ${x.s.atSum} d háb. de atraso · mayor: exp. ${esc(x.s.mayor.num)} (${x.s.mayor.at} d)`:'sin demoras';
+  const tile=(ic,t,r,d,k)=>`<div style="--k:${k}"><small>${ic} ${t}${r&&r.length>1?' · empate':''}</small>${r?r.map(x=>`<b>${x.e.nombre}</b><span>${d(x)}</span>`).join(''):'<span>Sin expedientes para evaluar</span>'}</div>`;
+  box.innerHTML=`<div class="ct">Conclusión según Base de Datos <span>${per0} · ${tot} expedientes · ${per.length} empleados</span></div>
+  <div class="cn">
+   ${tile('📂','Mayor cantidad asignada',R.asig,dA,'#6366f1')}
+   ${tile('⚠️','Menor cumplimiento (c/ demora)',R.menC,dC,'#ef4444')}
+   ${tile('🏆','Mejor cumplimiento antes de tiempo (c/ demora)',R.mejC,dC,'#10b981')}
+   ${tile('⏰','Mayor demora',R.mayD,dD,'#ef4444')}
+   ${tile('✅','Menor demora',R.menD,dD,'#10b981')}
+   ${tile('🆕','Mayor Nuevo Patrocinio',R.npMax,dK('np'),'#06b6d4')}
+   ${tile('🔻','Menor Nuevo Patrocinio',R.npMin,dK('np'),'#f59e0b')}
+   ${tile('🛡️','Mayor Nuevo Patrocinio Violencia Familiar',R.vfMax,dK('vf'),'#8b5cf6')}
+   ${tile('🔻','Menor Nuevo Patrocinio Violencia Familiar',R.vfMin,dK('vf'),'#f59e0b')}
+  </div>`;
+  /* Redacción: con más de 3 empatados se listan solo los nombres */
+  const q=(r,d)=>{const t=r.length>3?[`<b>${r.length} empleados</b> (${r.map(x=>esc(x.e.corto)).join(', ')})`]:r.map(x=>`<b>${x.e.nombre}</b> (${d(x)})`);return t.length>1?t.slice(0,-1).join(', ')+' y '+t[t.length-1]+', en empate,':t[0]};
+  const v=(r,a,b)=>r.length>1?b:a;
+  const p1=`Según los datos registrados en la base de datos (${per0.toLowerCase()}), se analizaron <b>${tot}</b> expedientes asignados a <b>${per.length}</b> empleados.`;
+  let p2=`La mayor cantidad de expedientes asignados corresponde a ${q(R.asig,dA)}. `;
+  if(!R.menC)p2+='Aún no hay expedientes finalizados ni vencidos para medir el cumplimiento de plazos.';
+  else if(rp(R.menC[0])===rp(R.mejC[0]))p2+=`Considerando las demoras, todos los empleados registran el mismo cumplimiento de plazo (${rp(R.menC[0])}%).`;
+  else p2+=`En cuanto al cumplimiento de plazos, teniendo en cuenta las demoras (expedientes finalizados fuera de plazo y abiertos con plazo vencido), ${q(R.menC,dC)} ${v(R.menC,'presenta','presentan')} el menor porcentaje, mientras que ${q(R.mejC,dC)} ${v(R.mejC,'exhibe','exhiben')} el mejor cumplimiento antes de tiempo.`;
+  const par=(t,mx,mn,k)=>mx[0].s[k]>0?`En <b>${t}</b>, ${q(mx,dK(k))} ${v(mx,'concentra','concentran')} la mayor cantidad, y ${q(mn,dK(k))} ${v(mn,'registra','registran')} la menor.`:`No se registraron expedientes de <b>${t}</b> en el período analizado.`;
+  const p3=par('Nuevo Patrocinio',R.npMax,R.npMin,'np')+' '+par('Nuevo Patrocinio Violencia Familiar',R.vfMax,R.vfMin,'vf');
+  const g=per.reduce((a,x)=>x.s.mayor&&(!a||x.s.mayor.at>a.s.mayor.at)?x:a,null);
+  const p4=R.mayD[0].s.nat===0?'No se registraron expedientes demorados en el período analizado.'
+    :`En materia de demoras, ${q(R.mayD,dD)} ${v(R.mayD,'registra','registran')} la mayor cantidad de expedientes demorados, y ${q(R.menD,dD)} ${v(R.menD,'registra','registran')} la menor. La mayor demora individual corresponde al expediente N° <b>${esc(g.s.mayor.num)}</b> de <b>${g.e.nombre}</b>, con ${g.s.mayor.at} días hábiles de atraso (${g.s.mayor.dem?'aún abierto':'finalizado fuera de plazo'}).`;
+  /* Diagnóstico: tipos de causa detectados y su clasificación */
+  const tp={};lp.forEach(r=>{(tp[r.tipo]??={n:0,c:r.cat}).n++});
+  const nomCat={np:'Nuevo Patrocinio',npvf:'Nuevo Patrocinio Violencia Familiar','':'—'};
+  const diag=Object.entries(tp).sort((a,b)=>b[1].n-a[1].n).map(([t,x])=>`<tr style="cursor:default"><td>${esc(t)}</td><td>${x.n}</td><td>${nomCat[x.c]}</td></tr>`).join('');
+  box.insertAdjacentHTML('beforeend',`<div class="txt" id="txtConcl"><p>${p1}</p><p>${p2}</p><p>${p4}</p><p>${p3}</p></div>
+   <div class="chips" style="margin-top:.8rem"><button id="bCopy">📋 Copiar conclusión</button></div>
+   <div class="nota"><b>Criterio de cumplimiento (con demora):</b> expedientes finalizados dentro del plazo ÷ (finalizados + abiertos con plazo vencido). Así, quien deja expedientes vencidos sin resolver no queda favorecido. <b>Demora:</b> días hábiles de atraso sobre el límite del nivel, en expedientes abiertos vencidos y en finalizados fuera de plazo. Igual % (con el redondeo mostrado) = empate y se listan todos. "Nuevo Patrocinio" = tipo que contiene esas palabras; "Violencia Familiar" = los que además contienen "violencia" (se cuentan por separado).
+   <details style="margin-top:.5rem"><summary style="cursor:pointer;font-weight:700">Ver tipos de causa detectados en la base y su clasificación</summary><div class="tw"><table style="margin-top:.5rem"><thead><tr><th>Tipo</th><th>Expedientes</th><th>Clasificado como</th></tr></thead><tbody>${diag}</tbody></table></div></details></div>`);
+  $('bCopy').onclick=async()=>{
+    const b=$('bCopy'),t=$('txtConcl').innerText;
+    try{await navigator.clipboard.writeText(t)}catch{const a=document.createElement('textarea');a.value=t;document.body.append(a);a.select();document.execCommand('copy');a.remove()}
+    b.textContent='✅ Copiado';setTimeout(()=>b.textContent='📋 Copiar conclusión',1800);
+  };
+}
+function render(){
+  M=meses();PER=new Set(M);
+  renderChips();renderKPIs();renderGraficos();renderTabla();renderConclusion();renderDemoras();renderDetalle();
+}
+$('rango').onchange=render;
+
+/* ============ 7. FIRESTORE (tiempo real) ============ */
+function estado(t,c){$('live').className='live '+c;$('liveTxt').textContent=t}
+db.collection('operador').onSnapshot(snap=>{
+  const out=[];let sin=0,mal=0;
+  snap.forEach(d=>{
+    if(d.id==='config'||d.id==='secretario_config')return;
+    const x=d.data();if(!x.numero)return;
+    try{const r=enriquecer(x);r?out.push(r):sin++}catch(err){mal++;console.warn('Expediente con datos inválidos:',d.id,err)}
+  });
+  rows=out;SIN=sin;
+  estado(`En vivo · ${rows.length} expedientes`+(sin?` · ${sin} sin empleado reconocido`:'')+(mal?` · ${mal} con datos inválidos`:''),'on');
+  try{render()}catch(err){console.error(err);estado('Error al generar el reporte','err')}
+},err=>{console.error(err);estado('Error de conexión con Firestore','err')});
+})();
+</script>
+</body>
+</html>
